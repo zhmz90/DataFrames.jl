@@ -29,20 +29,21 @@ DataFrame(ex::Expr) = based_on(DataFrame(), ex)
 DataFrame{T}(x::Array{T,2}, cn::Vector) = DataFrame({x[:,i] for i in 1:length(cn)}, cn)
 DataFrame{T}(x::Array{T,2}) = DataFrame(x, [strcat("x", i) for i in 1:size(x,2)])
 
+index(df::DataFrame) = df.colindex
+columns(df::DataFrame) = df.columns
 
-colnames(df::DataFrame) = names(df.colindex)
-names!(df::DataFrame, vals) = names!(df.colindex, vals)
-colnames!(df::DataFrame, vals) = names!(df.colindex, vals)
-replace_names!(df::DataFrame, from, to) = replace_names!(df.colindex, from, to)
-replace_names(df::DataFrame, from, to) = replace_names(df.colindex, from, to)
-ncol(df::DataFrame) = length(df.colindex)
-nrow(df::DataFrame) = ncol(df) > 0 ? length(df.columns[1]) : 0
+colnames(df::AbstractDataFrame) = names(index(df))
+names!(df::AbstractDataFrame, vals) = names!(index(df), vals)
+colnames!(df::AbstractDataFrame, vals) = names!(index(df), vals)
+replace_names!(df::AbstractDataFrame, from, to) = replace_names!(index(df), from, to)
+replace_names(df::AbstractDataFrame, from, to) = replace_names(index(df), from, to)
+ncol(df::AbstractDataFrame) = length(index(df))
+nrow(df::AbstractDataFrame) = ncol(df) > 0 ? length(df[1]) : 0
 names(df::AbstractDataFrame) = colnames(df)
 size(df::AbstractDataFrame) = (nrow(df), ncol(df))
 size(df::AbstractDataFrame, i::Integer) = i==1 ? nrow(df) : (i==2 ? ncol(df) : error("DataFrames have two dimensions only"))
 length(df::AbstractDataFrame) = ncol(df)
 ndims(::AbstractDataFrame) = 2
-
 
 # these are the underlying ref functions that create a new DF object with references to the
 # existing columns. The column index needs to be rebuilt with care, so that groups are preserved
@@ -52,7 +53,7 @@ function ref(df::DataFrame, c::Vector{Int})
 	reconcile_groups(df, newdf)
 end
 function ref(df::DataFrame, r, c::Vector{Int})
-	newdf = DataFrame({x[r] for x in df.columns[c]}, convert(Vector{ByteString}, colnames(df)[c]))
+	newdf = DataFrame({x[r] for x in columns(df)[c]}, convert(Vector{ByteString}, colnames(df)[c]))
 	reconcile_groups(df, newdf)
 end
 
@@ -76,22 +77,20 @@ function reconcile_groups(olddf, newdf)
 end
 
 # all other ref() implementations call the above
-ref(df::DataFrame, c) = df[df.colindex[c]]
-ref(df::DataFrame, c::Integer) = df.columns[c]
-ref(df::DataFrame, r, c) = df[r, df.colindex[c]]
-ref(df::DataFrame, r, c::Int) = df[c][r]
+ref(df::DataFrame, c::Integer) = columns(df)[c]
+ref(df::AbstractDataFrame, c) = df[index(df)[c]]
+ref(df::AbstractDataFrame, r, c) = df[r, index(df)[c]]
+ref(df::AbstractDataFrame, r, c::Int) = df[c][r]
 
 # special cases
-ref(df::DataFrame, r::Int, c::Int) = df[c][r]
-ref(df::DataFrame, r::Int, c::Vector{Int}) = df[[r], c]
-ref(df::DataFrame, r::Int, c) = df[r, df.colindex[c]]
-ref(df::DataFrame, dv::AbstractDataVec) = df[with(df, ex), c]
-ref(df::DataFrame, ex::Expr) = df[with(df, ex), :]  
-ref(df::DataFrame, ex::Expr, c::Int) = df[with(df, ex), c]
-ref(df::DataFrame, ex::Expr, c::Vector{Int}) = df[with(df, ex), c]
-ref(df::DataFrame, ex::Expr, c) = df[with(df, ex), c]
-
-index(df::DataFrame) = df.colindex
+ref(df::AbstractDataFrame, r::Int, c::Int) = df[c][r]
+ref(df::AbstractDataFrame, r::Int, c::Vector{Int}) = df[[r], c]
+ref(df::AbstractDataFrame, r::Int, c) = df[r, index(df)[c]]
+ref(df::AbstractDataFrame, dv::AbstractDataVec) = df[with(df, ex), c]
+ref(df::AbstractDataFrame, ex::Expr) = df[with(df, ex), :]  
+ref(df::AbstractDataFrame, ex::Expr, c::Int) = df[with(df, ex), c]
+ref(df::AbstractDataFrame, ex::Expr, c::Vector{Int}) = df[with(df, ex), c]
+ref(df::AbstractDataFrame, ex::Expr, c) = df[with(df, ex), c]
 
 # Associative methods:
 has(df::AbstractDataFrame, key) = has(index(df), key)
