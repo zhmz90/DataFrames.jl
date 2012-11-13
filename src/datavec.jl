@@ -12,9 +12,6 @@
 ## Secondary type is a PooledDataVec, which is a parameterized type that wraps a vector of UInts and a vector of
 ## the type, indexed by the main vector. NAs are 0s in the UInt vector. 
 
-require("enum.jl")
-require("bitarray.jl")
-
 abstract AbstractDataVec{T}
 
 bitstype 8 NARule
@@ -37,12 +34,15 @@ type DataVec{T} <: AbstractDataVec{T}
 end
 # the usual partial constructor
 DataVec{T}(d::Vector{T}, m::Vector{Bool}) = DataVec(d, bitpack(m))
-DataVec{T}(d::Vector{T}, m::BitVector) = DataVec{T}(d, m, KEEP, zero(T))
+DataVec{T}(d::Vector{T}, m::BitVector) = DataVec{T}(d, m, KEEP, baseval(T))
 # a full constructor (why is this necessary?)
 DataVec{T}(d::Vector{T}, m::Vector{Bool}, nar::NARule, v::T) = DataVec(d, bitpack(m), nar, v)
 DataVec{T}(d::Vector{T}, m::BitVector, nar::NARule, v::T) = DataVec{T}(d, m, nar, v)
 # a no-op constructor
 DataVec(d::DataVec) = d
+
+baseval(x) = zero(x)
+baseval{T <: String}(s::Type{T}) = ""
 
 type PooledDataVec{T} <: AbstractDataVec{T}
     refs::Vector{Uint16} # TODO: make sure we don't overflow
@@ -209,7 +209,7 @@ function _dv_most_generic_type(vals)
             toptype = promote_type(toptype, typeof(vals[i]))
         end
     end
-    # TODO: confirm that this type has a zero() 
+    # TODO: confirm that this type has a baseval() 
     toptype
 end
 function ref(::Type{DataVec}, vals...)
@@ -222,7 +222,7 @@ function ref(::Type{DataVec}, vals...)
     # copy from vals into data and mask
     for i = 1:lenvals
         if isna(vals[i])
-            ret.data[i] = zero(toptype)
+            ret.data[i] = baseval(toptype)
             ret.na[i] = true
         else
             ret.data[i] = vals[i]
@@ -295,14 +295,37 @@ function =={T}(a::AbstractDataVec{T}, b::AbstractDataVec{T})
     return true
 end
 
-# element-wise (in)equality operators
-for (f,scalarf) in ((:(.==),:(==)), (:.<, :<), (:.>, :>), (:.!=,:!=), (:.<=,:<=), (:.>=, :>=))
+# element-wise symmetric (in)equality operators
+for (f,scalarf) in ((:(.==),:(==)), (:.!=,:!=))
     @eval begin    
         function ($f){T}(a::AbstractDataVec{T}, v::T)
             # allocate a DataVec for the return value, then assign into it
             ret = DataVec(Array(Bool,length(a)), BitArray(length(a)), naRule(a), false)
             for i = 1:length(a)
                 ret[i] = isna(a[i]) ? NA : ($scalarf)(a[i], v)
+            end
+            ret
+        end
+        ($f){T}(v::T, a::AbstractDataVec{T}) = ($f)(a::AbstractDataVec{T}, v::T)
+    end
+end
+
+# element-wise antisymmetric (in)equality operators
+for (f,scalarf,scalarantif) in ((:.<, :<, :>), (:.>, :>, :<), (:.<=,:<=, :>=), (:.>=, :>=, :<=))
+    @eval begin    
+        function ($f){T}(a::AbstractDataVec{T}, v::T)
+            # allocate a DataVec for the return value, then assign into it
+            ret = DataVec(Array(Bool,length(a)), BitArray(length(a)), naRule(a), false)
+            for i = 1:length(a)
+                ret[i] = isna(a[i]) ? NA : ($scalarf)(a[i], v)
+            end
+            ret
+        end
+        function ($f){T}(v::T, a::AbstractDataVec{T})
+            # allocate a DataVec for the return value, then assign into it
+            ret = DataVec(Array(Bool,length(a)), BitArray(length(a)), naRule(a), false)
+            for i = 1:length(a)
+                ret[i] = isna(a[i]) ? NA : ($scalarantif)(a[i], v)
             end
             ret
         end
