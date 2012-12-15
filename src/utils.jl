@@ -86,8 +86,6 @@ function make_unique{S<:ByteString}(names::Vector{S})
     names
 end
 
-similar{K,V}(d::Dict{K,V}) = Dict{K,V}(length(d.keys))
-
 # TODO: move to set.jl? call nointer or nodupes?
 # reasonably fast approach: foreach argument, iterate over
 # the (presumed) set, checking for duplicates, adding to a hash table as we go
@@ -118,16 +116,37 @@ function concat{T1,T2}(v1::Vector{T1}, v2::Vector{T2})
     end
 end
 
-function _remove_quotes(s)
-    m = match(r"^\"(.*)\"$", s)
-    if m != nothing
-        return m.captures[1]::ASCIIString
-    else
-        return s::ASCIIString
-    end
-end
-
 function _same_set(a, b)
     # there are definitely MUCH faster ways of doing this
     length(a) == length(b) && all(sort(a) == sort(b))
+end
+
+const INTREGEX = r"^(-)?\d+$"
+function int_able{T <: String}(s::T)
+  ismatch(INTREGEX, s)
+end
+
+const FLOATREGEX = r"^(-)?\d+(\.\d+(e(-?)\d+)?)?$"
+function float_able{T <: String}(s::T)
+  ismatch(FLOATREGEX, s)
+end
+
+function tightest_type{S <: String, T}(s::S, t::T)
+  if t == UTF8String
+    return(UTF8String)
+  elseif t == Float64
+    if float_able(s)
+      return Float64
+    else
+      return UTF8String
+    end
+  elseif t == Int64
+    if int_able(s)
+      return Int64
+    elseif float_able(s)
+      return Float64
+    else
+      return UTF8String
+    end
+  end
 end
