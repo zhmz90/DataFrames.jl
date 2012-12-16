@@ -1,6 +1,38 @@
-load("hdf5.jl")
-import HDF5Mod.*
-import HDF5Mod
+load("HDF5")
+import HDF5
+import JLD
+
+# Support for read/write of standard DataFrames
+function read(obj::HDF5Dataset{JldFile}, ::Type{DataFrame})
+    kv = getrefs(obj, Any)
+    DataFrame(kv[1], kv[2])
+end
+
+function write(parent::Union(JldFile, HDF5Group{JldFile}), name::ASCIIString, d::DataFrame)
+    n = length(d)
+    K = keytype(d)
+    V = valtype(d)
+    ks = Array(K, n)
+    vs = Array(V, n)
+    i = 0
+    for i in 1:ncol(d)
+        ks[i] = names(d)[i]
+        vs[i] = d[i]
+    end
+    da = Any[vs, xs]
+    write(parent, name, da, string(typeof(d)))
+end
+
+# Support for an on-disk DataFrame type
+type HDF5DataFrame <: AbstractDataFrame
+    # Each column is a Dataset.
+    grp::HDF5Group
+    columns::Vector{Any}
+    colindex::Index
+end
+
+
+
 
 
 type HDF5GroupDF <: AbstractDataFrame
