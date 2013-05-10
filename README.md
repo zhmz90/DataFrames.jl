@@ -1,6 +1,8 @@
 DataFrames.jl
 =========
 
+[![Build Status](https://travis-ci.org/HarlanH/DataFrames.jl.png)](https://travis-ci.org/HarlanH/DataFrames.jl)
+
 Package for working with tabular data in Julia using `DataFrame`'s.
 
 # Installation
