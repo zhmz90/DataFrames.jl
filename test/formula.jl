@@ -1,7 +1,7 @@
 using Base.Test
 using DataFrames
 
-let
+module DataFramesFormula
 	# TODO:
 	# - grouped variables in formulas with interactions
 	# - is it fast?  Can expand() handle DataFrames?

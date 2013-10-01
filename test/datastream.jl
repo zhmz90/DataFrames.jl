@@ -1,7 +1,7 @@
 using Base.Test
 using DataFrames
 
-let
+module DataFramesDataStream
     filename = Pkg.dir("DataFrames", "test", "data", "sample_data.csv")
 
     ds = DataStream(filename)

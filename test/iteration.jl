@@ -1,7 +1,7 @@
 using Base.Test
 using DataFrames
 
-let
+module DataFramesIteration
 	dv = DataVector[1, 2, NA]
 	dm = DataArray([1 2; 3 4])
 	dt = datazeros(2, 2, 2)

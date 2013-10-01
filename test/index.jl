@@ -1,7 +1,7 @@
 using Base.Test
 using DataFrames
 
-let
+module DataFramesIndex
 	i = Index()
 	push!(i, "A")
 	push!(i, "B")

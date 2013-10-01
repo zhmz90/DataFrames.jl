@@ -1,7 +1,7 @@
 using Base.Test
 using DataFrames
 
-let
+module DataFramesRBind
 	null_df = DataFrame(0, 0)
 	df = DataFrame(Int, 4, 3)
 

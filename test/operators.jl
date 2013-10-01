@@ -12,7 +12,7 @@ macro test_da_pda(da, code)
     end)
 end
 
-let
+module DataFramesOperators
     unary_operators = [(+), (-), (!)]
 
     numeric_unary_operators = [(+), (-)]

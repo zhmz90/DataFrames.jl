@@ -1,7 +1,7 @@
 using Base.Test
 using DataFrames
 
-let
+module DataFramesExtras
 	##########
 	## paste
 	##########

@@ -1,7 +1,7 @@
 using Base.Test
 using DataFrames
 
-let
+module DataFramesIO
     #test_group("Confirm that we can read various file types.")
 
     filenames = ["test/data/blanklines/blanklines.csv",

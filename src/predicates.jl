@@ -1,3 +1,4 @@
+# Try :(Base.iseven)
 numeric_predicates = (:iseven, :ispow2, :isfinite, :isprime, :isinf, :isodd)
 
 type_predicates = (:isbool, :isinteger, :isreal, :iscomplex, :islogical)
