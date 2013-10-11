@@ -116,7 +116,7 @@ function dreadtable(b::Block; kwargs...)
     DDataFrame(rrefs, procs)
 end
 dreadtable(fname::String; kwargs...) = dreadtable(Block(File(fname)) |> as_io |> as_recordio; kwargs...)
-function dreadtable(io::Union(AsyncStream,IOStream), chunk_sz::Int, merge_chunks::Bool=true; kwargs...)
+function dreadtable(io::Union(Base.AsyncStream,IOStream), chunk_sz::Int, merge_chunks::Bool=true; kwargs...)
     b = (Block(io, chunk_sz, '\n') .> as_recordio) .> as_bytearray
     rrefs = pmap(x->as_dataframe(PipeBuffer(x); kwargs...), b; fetch_results=false)
     procs = map(x->x.where, rrefs)
@@ -353,14 +353,14 @@ end
 # Operations on Distributed DataFrames
 # TODO: colmedians, colstds, colvars, colffts, colnorms
 
-for f in [DataFrames.elementary_functions, DataFrames.unary_operators, :copy, :deepcopy, :isfinite, :isnan]
-    @eval begin
-        function ($f)(dt::DDataFrame)
-            rrefs = pmap(x->($f)(fetch(x)), Block(dt); fetch_results=false)
-            DDataFrame(rrefs, dt.procs)
-        end
-    end
-end
+# for f in [DataFrames.elementary_functions, DataFrames.unary_operators, Base.copy, Base.deepcopy, Base.isfinite, Base.isnan]
+#     @eval begin
+#         function ($f)(dt::DDataFrame)
+#             rrefs = pmap(x->($f)(fetch(x)), Block(dt); fetch_results=false)
+#             DDataFrame(rrefs, dt.procs)
+#         end
+#     end
+# end
 
 for f in [:without]
     @eval begin
@@ -466,7 +466,7 @@ for f in DataFrames.array_arithmetic_operators
     end
 end
 
-for f in [:all, :any]
+for f in [Base.all, Base.any]
     @eval begin
         function ($f)(dt::DDataFrame)
             ($f)(pmap(x->($f)(fetch(x)), Block(dt)))
@@ -474,7 +474,7 @@ for f in [:all, :any]
     end
 end
 
-function isequal(a::DDataFrame, b::DDataFrame)
+function Base.isequal(a::DDataFrame, b::DDataFrame)
     all(pmap((x,y)->isequal(fetch(x),fetch(y)), Block(a), Block(b)))
 end
 

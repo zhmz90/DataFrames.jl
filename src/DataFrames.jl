@@ -7,6 +7,8 @@ using DataArrays
 
 module DataFrames
 
+const DEFAULT_COLUMN_TYPE = Float64
+
 ##############################################################################
 ##
 ## Dependencies
@@ -75,7 +77,6 @@ export # reconcile_groups,
        EachRow,
        findat,
        flipud!,
-       flipud,
        Formula,
        get_groups,
        gl,
@@ -184,13 +185,11 @@ include("reshape.jl")
 include("formula.jl")
 include("io.jl")
 include("datastream.jl")
-include("operators.jl") # TODO: Move parts of this out
-include("statistics.jl")
-include("predicates.jl")
+include("operators.jl")
 include("indexing.jl")
 include("extras.jl")
 include("RDA.jl")
-include("dataframe_blocks.jl")
+# include("dataframe_blocks.jl")
 
 ##############################################################################
 ##

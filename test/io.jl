@@ -1,7 +1,8 @@
-using Base.Test
-using DataFrames
-
 module DataFramesIO
+    using Base.Test
+    using DataFrames
+    using DataArrays
+
     #test_group("Confirm that we can read various file types.")
 
     filenames = ["test/data/blanklines/blanklines.csv",

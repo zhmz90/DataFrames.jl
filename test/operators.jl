@@ -1,6 +1,7 @@
 module DataFramesOperators
     using Base.Test
-    using DataFrames, DataArrays
+    using DataFrames
+    using DataArrays
 
     # Unary operators on DataFrame's should be equivalent to elementwise
     # application of those same operators

@@ -123,7 +123,7 @@ function DataArrays.PooledDataArray{R}(df::AbstractDataFrame, ::Type{R})
     return PooledDataArray(RefArray(refs), pool)
 end
 
-DataArrays.PooledDataArray(df::AbstractDataFrame) = PooledDataArray(df, DEFAULT_POOLED_REF_TYPE)
+DataArrays.PooledDataArray(df::AbstractDataFrame) = PooledDataArray(df, DataArrays.DEFAULT_POOLED_REF_TYPE)
 
 # Union(Vector{T}, ByteString, Nothing
 function Base.join(df1::AbstractDataFrame,

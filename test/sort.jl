@@ -1,7 +1,8 @@
-using Base.Test
-using DataFrames
-
 module DataFramesSort
+	using Base.Test
+	using DataFrames
+	using DataArrays
+
 	dv1 = DataVector[9,1,8,NA,3,3,7,NA]
 	dv2 = 1.0 * dv1
 	dv3 = DataArray([1:8])

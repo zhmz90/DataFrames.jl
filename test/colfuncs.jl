@@ -1,7 +1,8 @@
-using Base.Test
-using DataFrames
-
 module DataFramesColFuncs
+	using Base.Test
+	using DataFrames
+	using DataArrays
+
 	m = [1 2 3; 3 4 6]
 	dm = DataArray(m)
 	df = DataFrame(m)

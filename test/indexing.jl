@@ -1,7 +1,8 @@
-using Base.Test
-using DataFrames
-
 module DataFramesIndexing
+    using Base.Test
+    using DataFrames
+    using DataArrays
+
     #
     # DataVector and PooledDataVector Indexing
     #

@@ -1,7 +1,8 @@
-using Base.Test
-using DataFrames
-
 module DataFramesFormula
+	using Base.Test
+	using DataFrames
+	using DataArrays
+
 	# TODO:
 	# - grouped variables in formulas with interactions
 	# - is it fast?  Can expand() handle DataFrames?

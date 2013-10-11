@@ -1,7 +1,16 @@
-using Base.Test
-using DataFrames
-
 module DataFramesData
+    using Base.Test
+    using DataFrames
+    using DataArrays
+
+    #test_group("DataVector creation")
+    dvint = DataVector[1, 2, NA, 4]
+    dvint2 = DataArray([5:8])
+    dvint3 = DataArray(5:8)
+    dvflt = DataVector[1.0, 2, NA, 4]
+    dvstr = DataVector["one", "two", NA, "four"]
+    dvdict = DataArray(Dict,4)    # for issue #199
+
     #test_group("constructors")
     df1 = DataFrame({dvint, dvstr}, ["Ints", "Strs"])
     df2 = DataFrame({dvint, dvstr}) 

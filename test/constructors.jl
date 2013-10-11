@@ -1,7 +1,8 @@
-using Base.Test
-using DataFrames
-
 module DataFramesConstructors
+	using Base.Test
+	using DataFrames
+	using DataArrays
+
 	df = DataFrame()
 	@assert isequal(df.columns, {})
 	# TODO: Get this to work

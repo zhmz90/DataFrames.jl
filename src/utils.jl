@@ -24,8 +24,6 @@ end
 ## Issue: this doesn't maintain the order in a:
 ## setdiff(a::Vector, b::Vector) = elements(Set(a...) - Set(b...))
 
-
-
 function _uniqueofsorted(x::Vector)
     idx = fill(true, length(x))
     lastx = x[1]

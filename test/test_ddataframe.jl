@@ -1,6 +1,7 @@
-using DataFrames
-
 module DataFramesDDataFrame
+	using DataFrames
+	using DataArrays
+
 	const datafile = "data/distributed/test.csv"
 	const nloops = 10
 

@@ -1,4 +1,4 @@
-function table{T}(d::AbstractDataArray{T})
+function Stats.table{T}(d::AbstractDataArray{T})
     counts = Dict{Union(T, NAtype), Int}()
     for i = 1:length(d)
         if haskey(counts, d[i])
@@ -66,7 +66,7 @@ function cut{S, T}(x::Vector{S}, breaks::Vector{T})
     if breaks[end] < max_x
         push!(breaks, max_x)
     end
-    refs = fill(zero(DEFAULT_POOLED_REF_TYPE), length(x))
+    refs = fill(zero(DataArrays.DEFAULT_POOLED_REF_TYPE), length(x))
     for i in 1:length(x)
         if x[i] == min_x
             refs[i] = 1
@@ -86,7 +86,7 @@ function cut{S, T}(x::Vector{S}, breaks::Vector{T})
     for i in 2:(n - 1)
         pool[i] = string("(", from[i], ",", to[i], "]")
     end
-    PooledDataArray(RefArray(refs), pool)
+    PooledDataArray(DataArrays.RefArray(refs), pool)
 end
 cut(x::Vector, ngroups::Int) = cut(x, quantile(x, [1 : ngroups - 1] / ngroups))
 

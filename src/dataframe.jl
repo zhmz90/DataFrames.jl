@@ -302,8 +302,8 @@ end
 nrow(df::DataFrame) = ncol(df) > 0 ? length(df.columns[1]) : 0
 ncol(df::DataFrame) = length(df.colindex)
 
-size(df::AbstractDataFrame) = (nrow(df), ncol(df))
-function size(df::AbstractDataFrame, i::Integer)
+Base.size(df::AbstractDataFrame) = (nrow(df), ncol(df))
+function Base.size(df::AbstractDataFrame, i::Integer)
     if i == 1
         nrow(df)
     elseif i == 2
@@ -1610,7 +1610,7 @@ function Base.flipud(df::DataFrame)
     return df[reverse(1:nrow(df)), :]
 end
 
-function Base.flipud!(df::DataFrame)
+function flipud!(df::DataFrame)
     df[1:nrow(df), :] = df[reverse(1:nrow(df)), :]
     return
 end
@@ -1630,25 +1630,25 @@ typealias ColIndexVec Union(AbstractVector{Integer}, AbstractVector{ASCIIString}
 const DF_STABLE_SORT = SortingAlgorithms.TimSort
 
 # Permute indices according to the ordering of the given dataframe columns
-type DFPerm{O<:Ordering,DF<:AbstractDataFrame} <: Ordering
+type DFPerm{O<:Base.Sort.Ordering,DF<:AbstractDataFrame} <: Base.Sort.Ordering
     ords::AbstractVector{O}
     df::DF
 end
 
-function DFPerm{O<:Ordering}(o::AbstractVector{O}, df::AbstractDataFrame)
+function DFPerm{O<:Base.Sort.Ordering}(o::AbstractVector{O}, df::AbstractDataFrame)
     o_cols = length(o)
     df_cols = ncols(df)
     if o_cols > df_cols
         error("DFPerm: number of column orderings is greater than the number of columns")
     end
     if o_cols < df_cols
-        o = cat(1, o, fill(Sort.Forward, df_cols-o_cols))
+        o = cat(1, o, fill(Base.Sort.Forward, df_cols-o_cols))
     end
     DFPerm{O,DF}(o, df[cols])
 end
 
-DFPerm{O<:Ordering,DF<:AbstractDataFrame}(o::O,  df::DF) = DFPerm{O,DF}(fill(o,ncol(df)), df)
-DFPerm{            DF<:AbstractDataFrame}(       df::DF) = DFPerm(Sort.Forward, df)
+DFPerm{O<:Base.Sort.Ordering,DF<:AbstractDataFrame}(o::O,  df::DF) = DFPerm{O,DF}(fill(o,ncol(df)), df)
+DFPerm{            DF<:AbstractDataFrame}(       df::DF) = DFPerm(Base.Sort.Forward, df)
 
 function Base.Sort.lt(o::DFPerm, a, b)
     for i = 1:ncol(o.df)
@@ -1662,11 +1662,11 @@ function Base.Sort.lt(o::DFPerm, a, b)
     false
 end
 
-Base.sortperm(df::AbstractDataFrame, a::Algorithm, o::Union(Perm,DFPerm)) = sort!([1:nrow(df)], a, o)
-Base.sortperm(df::AbstractDataFrame, a::Algorithm, o::Ordering) = sortperm(df, a, DFPerm(o,df))
-Base.Sort.sort    (df::AbstractDataFrame, a::Algorithm, o::Ordering) = df[sortperm(df, a, o),:]
+Base.sortperm(df::AbstractDataFrame, a::Base.Sort.Algorithm, o::Union(Base.Sort.Perm,DFPerm)) = sort!([1:nrow(df)], a, o)
+Base.sortperm(df::AbstractDataFrame, a::Base.Sort.Algorithm, o::Base.Sort.Ordering) = sortperm(df, a, DFPerm(o,df))
+Base.Sort.sort(df::AbstractDataFrame, a::Base.Sort.Algorithm, o::Base.Sort.Ordering) = df[sortperm(df, a, o),:]
 
-function Base.Sort.sort!(df::AbstractDataFrame, a::Algorithm, o::Ordering)
+function Base.Sort.sort!(df::AbstractDataFrame, a::Base.Sort.Algorithm, o::Base.Sort.Ordering)
     p = sortperm(df, a, o)
     pp = similar(p)
     for col in df.columns
@@ -1679,9 +1679,9 @@ end
 # TODO: Get name qualification right here
 for s in {:sort!, :sort, :sortperm}
     @eval begin
-        $s{O<:Ordering}(df::AbstractDataFrame, ::Type{O})   = $s(df, DF_STABLE_SORT, O())
-        $s             (df::AbstractDataFrame, o::Ordering) = $s(df, DF_STABLE_SORT, o)
-        $s             (df::AbstractDataFrame             ) = $s(df, Sort.Forward)
+        $s{O<:Base.Sort.Ordering}(df::AbstractDataFrame, ::Type{O})   = $s(df, DF_STABLE_SORT, O())
+        $s             (df::AbstractDataFrame, o::Base.Sort.Ordering) = $s(df, DF_STABLE_SORT, o)
+        $s             (df::AbstractDataFrame             ) = $s(df, Base.Sort.Forward)
     end
 end
 
@@ -1689,24 +1689,24 @@ for (sb,s) in {(:sortby!, :sort!), (:sortby, :sort)}
     @eval begin
         $sb(df::AbstractDataFrame, by::Function) = $s(df,By(by))
 
-        $sb{O<:Ordering}(df::AbstractDataFrame, col::ColumnIndex, ::Type{O})   = $s(df,Perm(O(),df[col]))
-        $sb             (df::AbstractDataFrame, col::ColumnIndex, o::Ordering) = $s(df,Perm(o,df[col]))
-        $sb             (df::AbstractDataFrame, col::ColumnIndex)              = $sb(df,col,Sort.Forward)
+        $sb{O<:Base.Sort.Ordering}(df::AbstractDataFrame, col::ColumnIndex, ::Type{O})   = $s(df,Perm(O(),df[col]))
+        $sb             (df::AbstractDataFrame, col::ColumnIndex, o::Base.Sort.Ordering) = $s(df,Perm(o,df[col]))
+        $sb             (df::AbstractDataFrame, col::ColumnIndex)              = $sb(df,col,Base.Sort.Forward)
 
-        $sb{O<:Ordering}(df::AbstractDataFrame, cols::ColIndexVec, ::Type{O})   = $s(df,DFPerm(O(),df[cols]))
-        $sb             (df::AbstractDataFrame, cols::ColIndexVec, o::Ordering) = $s(df,DFPerm(o,  df[cols]))
-        $sb             (df::AbstractDataFrame, cols::ColIndexVec)              = $sb(df,cols,Sort.Forward)
+        $sb{O<:Base.Sort.Ordering}(df::AbstractDataFrame, cols::ColIndexVec, ::Type{O})   = $s(df,DFPerm(O(),df[cols]))
+        $sb             (df::AbstractDataFrame, cols::ColIndexVec, o::Base.Sort.Ordering) = $s(df,DFPerm(o,  df[cols]))
+        $sb             (df::AbstractDataFrame, cols::ColIndexVec)              = $sb(df,cols,Base.Sort.Forward)
 
-        $sb{O<:Ordering}(df::AbstractDataFrame, cols::ColIndexVec, o::AbstractArray{O})             = $s(df,DFPerm(o, df[cols]))
-        $sb             (df::AbstractDataFrame, cols::ColIndexVec, o::AbstractArray{DataType}) = $s(df,DFPerm(Ordering[O() for O in o], df[cols]))
+        $sb{O<:Base.Sort.Ordering}(df::AbstractDataFrame, cols::ColIndexVec, o::AbstractArray{O})             = $s(df,DFPerm(o, df[cols]))
+        $sb             (df::AbstractDataFrame, cols::ColIndexVec, o::AbstractArray{DataType}) = $s(df,DFPerm(Base.Sort.Ordering[O() for O in o], df[cols]))
         $sb             (df::AbstractDataFrame, cols::ColIndexVec, o::AbstractArray)                = $sb(df,cols,DataType[ot for ot in o])
         $sb             (df::AbstractDataFrame, col_ord::AbstractArray{Tuple}) = ((cols,o) = zip(col_ord...); $sb(df, [cols...], [o...]))
     end
 end
 
 # Extras to speed up sorting
-Base.sortperm{V}(d::AbstractDataFrame, a::Sort.Algorithm, o::FastPerm{Sort.ForwardOrdering,V}) = sortperm(o.vec)
-Base.sortperm{V}(d::AbstractDataFrame, a::Sort.Algorithm, o::FastPerm{Sort.ReverseOrdering,V}) = reverse(sortperm(o.vec))
+Base.sortperm{V}(d::AbstractDataFrame, a::Base.Sort.Algorithm, o::FastPerm{Base.Sort.ForwardOrdering,V}) = sortperm(o.vec)
+Base.sortperm{V}(d::AbstractDataFrame, a::Base.Sort.Algorithm, o::FastPerm{Base.Sort.ReverseOrdering,V}) = reverse(sortperm(o.vec))
 
 # reorder! for factors by specifying a DataFrame
 function DataArrays.reorder(fun::Function, x::PooledDataArray, df::AbstractDataFrame)
@@ -1788,7 +1788,7 @@ end
 ##
 ##############################################################################
 
-function Base.dict(adf::AbstractDataFrame, flatten::Bool)
+function Base.Dict(adf::AbstractDataFrame, flatten::Bool)
     # TODO: Make flatten an option
     # TODO: Provide a de-data option that makes Vector's, not
     #       DataVector's
@@ -1804,7 +1804,7 @@ function Base.dict(adf::AbstractDataFrame, flatten::Bool)
     end
     return res
 end
-Base.dict(adf::AbstractDataFrame) = dict(adf, false)
+Base.Dict(adf::AbstractDataFrame) = Dict(adf, false)
 
 # TODO: Add proper tests
 # adf = DataFrame(quote A = 1:4; B = ["A", "B", "C", "D"] end)

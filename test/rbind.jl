@@ -1,7 +1,8 @@
-using Base.Test
-using DataFrames
-
 module DataFramesRBind
+	using Base.Test
+	using DataFrames
+	using DataArrays
+
 	null_df = DataFrame(0, 0)
 	df = DataFrame(Int, 4, 3)
 

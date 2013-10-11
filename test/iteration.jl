@@ -1,7 +1,8 @@
-using Base.Test
-using DataFrames
-
 module DataFramesIteration
+	using Base.Test
+	using DataFrames
+	using DataArrays
+
 	dv = DataVector[1, 2, NA]
 	dm = DataArray([1 2; 3 4])
 	dt = datazeros(2, 2, 2)

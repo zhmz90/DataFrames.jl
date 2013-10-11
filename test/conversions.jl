@@ -1,7 +1,8 @@
-using Base.Test
-using DataFrames
-
 module DataFramesConversions
+	using Base.Test
+	using DataFrames
+	using DataArrays
+
 	df = DataFrame()
 	df["A"] = 1:5
 	df["B"] = ["A", "B", "C", "D", "E"]
