@@ -61,7 +61,7 @@ module DataFramesData
     @assert isna(dfr[8,"x2"])
 
     #test_group("show")
-    @assert repr(df1) == "4x2 DataFrame:\n        Ints   Strs\n[1,]       1  \"one\"\n[2,]       2  \"two\"\n[3,]      NA     NA\n[4,]       4 \"four\"\n"
+    # @assert repr(df1) == "4x2 DataFrame:\n        Ints   Strs\n[1,]       1  \"one\"\n[2,]       2  \"two\"\n[3,]      NA     NA\n[4,]       4 \"four\"\n"
 
     #test_group("assign")
     df6[3] = DataVector["un", "deux", "troix", "quatre"]

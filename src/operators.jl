@@ -1,81 +1,6 @@
-const unary_operators = [:(+), :(-), :(!), :(*)]
-
-const numeric_unary_operators = [:(+), :(-)]
-
-const logical_unary_operators = [:(!)]
-
-const elementary_functions = [:abs, :sign, :acos, :acosh, :asin,
-                              :asinh, :atan, :atanh, :sin, :sinh,
-                              :cos, :cosh, :tan, :tanh, :ceil, :floor,
-                              :round, :trunc, :exp, :exp2, :expm1, :log, :log10, :log1p,
-                              :log2, :exponent, :sqrt, :gamma, :lgamma, :digamma,
-                              :erf, :erfc]
-
-const two_argument_elementary_functions = [:round, :ceil, :floor, :trunc]
-
-const special_comparison_operators = [:isless]
-
-const comparison_operators = [:(==), :(.==), :(!=), :(.!=),
-                              :(>), :(.>), :(>=), :(.>=), :(<), :(.<),
-                              :(<=), :(.<=)]
-
-const scalar_comparison_operators = [:(==), :(!=), :(>), :(>=),
-                                     :(<), :(<=)]
-
-const array_comparison_operators = [:(.==), :(.!=), :(.>), :(.>=), :(.<), :(.<=)]
-
-const vectorized_comparison_operators = [(:(.==), :(==)), (:(.!=), :(!=)),
-                                         (:(.>), :(>)), (:(.>=), :(>=)),
-                                         (:(.<), :(<)), (:(.<=), :(<=))]
-
-const binary_operators = [:(+), :(.+), :(-), :(.-), :(*), :(.*), :(/), :(./),
-                          :(.^), :(div), :(mod), :(fld), :(rem)]
-
-const induced_binary_operators = [:(^)]
-
-const arithmetic_operators = [:(+), :(.+), :(-), :(.-), :(*), :(.*), :(/), :(./),
-                              :(.^), :(div), :(mod), :(fld), :(rem)]
-
-const induced_arithmetic_operators = [:(^)]
-
-const biscalar_operators = [:(max), :(min)]
-
-const scalar_arithmetic_operators = [:(+), :(-), :(*), :(/),
-                                     :(div), :(mod), :(fld), :(rem)]
-
-const induced_scalar_arithmetic_operators = [:(^)]
-
-const array_arithmetic_operators = [:(+), :(.+), :(-), :(.-), :(.*), :(.^)]
-
-const bit_operators = [:(&), :(|), :($)]
-
-const unary_vector_operators = [:min, :max, :prod, :sum, :mean, :median, :std,
-                                :var, :mad, :norm, :skewness, :kurtosis]
-
-
-# TODO: dist, iqr, rle, inverse_rle
-
-const pairwise_vector_operators = [:diff, :reldiff, :percent_change]
-
-const cumulative_vector_operators = [:cumprod, :cumsum, :cumsum_kbn, :cummin, :cummax]
-
-const ffts = [:fft]
-
-const binary_vector_operators = [:dot, :cor, :cov, :cor_spearman]
-
-const rowwise_operators = [:rowmins, :rowmaxs, :rowprods, :rowsums,
-                           :rowmeans, :rowmedians, :rowstds, :rowvars,
-                           :rowffts, :rownorms]
-
-const columnar_operators = [:colmins, :colmaxs, :colprods, :colsums,
-                            :colmeans, :colmedians, :colstds, :colvars,
-                            :colffts, :colnorms]
-
-const boolean_operators = [:any, :all]
-
 # Swap arguments to fname() anywhere in AST. Returns the number of
 # arguments swapped
-function swapargs(ast::Expr, fname::Symbol)
+function swapargs(ast::Expr, fname::Union(Expr, Symbol))
     if ast.head == :call &&
        (ast.args[1] == fname ||
         (isa(ast.args[1], Expr) && ast.args[1].head == :curly &&
@@ -92,7 +17,7 @@ function swapargs(ast::Expr, fname::Symbol)
         n
     end
 end
-function swapargs(ast, fname::Symbol)
+function swapargs(ast, fname::Union(Expr, Symbol))
     ast
     0
 end
@@ -108,12 +33,8 @@ macro swappable(func, syms...)
     
     func2 = deepcopy(func)
     fname = func2.args[1].args[1]
-    if isa(fname, Expr)
-        if fname.head == :curly
-            fname = fname.args[1]
-        else
-            error("Unexpected function name $fname")
-        end
+    if isa(fname, Expr) && fname.head == :curly
+        fname = fname.args[1]
     end
 
     for s in unique([fname, syms...])
@@ -153,7 +74,7 @@ end
 @dataframe_unary !
 @dataframe_unary -
 # As in Base, these are identity operators
-for f in (:(+), :(*))
+for f in [:+, :*]
     @eval $(f)(d::DataFrame) = d
 end
 
@@ -165,27 +86,28 @@ end
 
 # One-argument elementary functions that return the same type as their
 # inputs
-for f in (:abs, :sign)
+for f in (:(Base.abs), :(Base.sign))
     @eval begin
         @dataframe_unary $(f)
     end
 end
 
 # One-argument elementary functions that always return floating points
-for f in (:acos, :acosh, :asin, :asinh, :atan, :atanh, :sin, :sinh, :cos,
-          :cosh, :tan, :tanh, :ceil, :floor, :round, :trunc, :exp, :exp2,
-          :expm1, :log, :log10, :log1p, :log2, :exponent, :sqrt, :gamma,
-          :lgamma, :digamma, :erf, :erfc)
+for f in (:(Base.acos), :(Base.acosh), :(Base.asin), :(Base.asinh), :(Base.atan), :(Base.atanh), :(Base.sin), :(Base.sinh), :(Base.cos),
+          :(Base.cosh), :(Base.tan), :(Base.tanh), :(Base.ceil), :(Base.floor), :(Base.round), :(Base.trunc), :(Base.exp), :(Base.exp2),
+          :(Base.expm1), :(Base.log), :(Base.log10), :(Base.log1p), :(Base.log2), :(Base.exponent), :(Base.sqrt), :(Base.gamma),
+          :(Base.lgamma), :(Base.digamma), :(Base.erf), :(Base.erfc))
     @eval begin
         @dataframe_unary $(f)
     end
 end
 
 # Elementary functions that take varargs
-for f in (:round, :ceil, :floor, :trunc)
+for f in (:(Base.round), :(Base.ceil), :(Base.floor), :(Base.trunc))
     @eval begin
-        $(f)(d::DataFrame, args::Integer...) = 
-            DataFrame([$(f)(d[i], args...) for i=1:size(d, 2)], deepcopy(index(d)))
+        function $(f)(d::DataFrame, args::Integer...)
+            DataFrame([$(f)(d[i], args...) for i = 1:size(d, 2)], deepcopy(index(d)))
+        end
     end
 end
 
@@ -203,9 +125,7 @@ end
 # Comparison operators
 #
 
-# This is for performance only; the definition in Base is sufficient
-# for AbstractDataArrays
-function isequal(df1::AbstractDataFrame, df2::AbstractDataFrame)
+function Base.isequal(df1::AbstractDataFrame, df2::AbstractDataFrame)
     if size(df1, 2) != size(df2, 2)
         return false
     end
@@ -217,7 +137,7 @@ function isequal(df1::AbstractDataFrame, df2::AbstractDataFrame)
     return true
 end
 
-for sf in scalar_comparison_operators
+for sf in [:(==), :(!=), :(>), :(>=), :(<), :(<=)]
     vf = symbol(".$sf")
     @eval begin
         @dataframe_binary $vf
@@ -228,31 +148,23 @@ end
 # Binary operators
 #
 
-for f in arithmetic_operators
+for f in [:(+),
+          :(.+),
+          :(-),
+          :(.-),
+          :(*),
+          :(.*),
+          :(/),
+          :(./),
+          :(.^),
+          :(Base.div),
+          :(Base.mod),
+          :(Base.fld),
+          :(Base.rem)]
     @eval begin
         @dataframe_binary $f
     end
 end
-
-for f in (:min, :max, :prod, :sum, :mean, :median, :std, :var, :norm)
-    colf = symbol("col$(f)s")
-    rowf = symbol("row$(f)s")
-    @eval begin
-        function ($colf)(df::AbstractDataFrame)
-            p = ncol(df)
-            res = DataFrame()
-            for j in 1:p
-                res[j] = DataArray(($f)(df[j]))
-            end
-            colnames!(res, colnames(df))
-            return res
-        end
-    end
-end
-
-#
-# Boolean operators
-#
 
 function Base.all(df::AbstractDataFrame)
     for i in 1:size(df, 2)
@@ -264,11 +176,11 @@ function Base.all(df::AbstractDataFrame)
             return false
         end
     end
-    true
+    return true
 end
 
 function Base.any(df::AbstractDataFrame)
-    has_na = false
+    hasna = false
     for i in 1:size(df, 2)
         x = any(df[i])
         if !isna(x)
@@ -276,8 +188,8 @@ function Base.any(df::AbstractDataFrame)
                 return true
             end
         else
-            has_na = true
+            hasna = true
         end
     end
-    has_na ? NA : false
+    return hasna ? NA : false
 end

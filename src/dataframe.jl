@@ -876,7 +876,24 @@ DataArrays.tail(df::AbstractDataFrame) = tail(df, 6)
 # then row-by-row print with an appropriate buffer
 _string(x) = sprint(showcompact, x)
 maxShowLength(v::Vector) = length(v) > 0 ? max([length(_string(x)) for x = v]) : 0
-maxShowLength(dv::AbstractDataVector) = length(dv) > 0 ? max([length(_string(x)) for x = dv]) : 0
+function maxShowLength(dv::AbstractDataVector)
+    # println("CALL")
+    # TODO: Figure out why this is broken
+    # ls = [println(length(_string(x))) for x = dv]
+    # ls = [length(_string(x)) for x = dv]
+    # println(dv)
+    # println(typeof(dv))
+    res = 0
+    n = length(dv)
+    if n > 0
+        for i in 1:n
+            res = max(res, length(_string(@which dv[i])))
+        end
+        return res
+    else
+        return 0
+    end
+end
 Base.show(io::IO, df::AbstractDataFrame) = show(io, df, 20)
 Base.showall(io::IO, df::AbstractDataFrame) = show(io, df, nrow(df))
 function Base.show(io::IO, df::AbstractDataFrame, Nmx::Integer)
