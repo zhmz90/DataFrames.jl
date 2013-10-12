@@ -70,6 +70,8 @@ macro dataframe_binary(f)
     end)
 end
 
+import Base.(!), Base.(-), Base.(+), Base.(*)
+
 # Unary operators, DataFrames
 @dataframe_unary !
 @dataframe_unary -
@@ -115,6 +117,8 @@ end
 # Bit operators
 #
 
+import Base.(&), Base.(|), Base.($)
+
 for f in (:&, :|, :$)
     @eval begin
         @dataframe_binary $(f)
@@ -137,6 +141,8 @@ function Base.isequal(df1::AbstractDataFrame, df2::AbstractDataFrame)
     return true
 end
 
+import Base.(==), Base.(!=), Base.(>), Base.(>=), Base.(<), Base.(<=)
+
 for sf in [:(==), :(!=), :(>), :(>=), :(<), :(<=)]
     vf = symbol(".$sf")
     @eval begin
@@ -148,19 +154,14 @@ end
 # Binary operators
 #
 
-for f in [:(+),
-          :(.+),
-          :(-),
-          :(.-),
-          :(*),
-          :(.*),
-          :(/),
-          :(./),
-          :(.^),
-          :(Base.div),
-          :(Base.mod),
-          :(Base.fld),
-          :(Base.rem)]
+import Base.(+), Base.(.+), Base.(-), Base.(.-), Base.(*),
+       Base.(.*), Base.(/), Base.(./), Base.(.^),
+       Base.div, Base.mod, Base.fld, Base.rem
+
+for f in [:(+), :(.+), :(-),
+          :(.-), :(*), :(.*),
+          :(/), :(./), :(.^),
+          :div, :mod, :fld, :rem]
     @eval begin
         @dataframe_binary $f
     end

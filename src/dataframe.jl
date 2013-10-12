@@ -887,7 +887,7 @@ function maxShowLength(dv::AbstractDataVector)
     n = length(dv)
     if n > 0
         for i in 1:n
-            res = max(res, length(_string(@which dv[i])))
+            res = max(res, length(_string(dv[i])))
         end
         return res
     else
