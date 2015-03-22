@@ -12,12 +12,6 @@ end
 
 ## dumb fit method: just copy the x and y input over
 StatsBase.fit(::Type{DummyMod}, x::Matrix, y::Vector) = DummyMod(x, y)
-## dumb coeftable: just prints the first four rows of the model (x) matrix
-StatsBase.coeftable(mod::DummyMod) =
-    CoefTable(transpose(mod.x),
-              ["row $n" for n in 1:min(4,size(mod.x,1))],
-              ["" for n in 1:size(mod.x,2)],
-              0)
 StatsBase.model_response(mod::DummyMod) = mod.y
 
 ## Test fitting
@@ -46,7 +40,27 @@ mm = ModelMatrix(ModelFrame(f, d))
 @test predict(m, d) == predict(m, mm.m)
 
 ## test copying of names from Terms to CoefTable
+## dumb coeftable: just prints the first four rows of the model (x) matrix
+StatsBase.coeftable(mod::DummyMod) =
+    CoefTable(transpose(mod.x),
+              ["row $n" for n in 1:min(4,size(mod.x,1))],
+              ["" for n in 1:size(mod.x,2)],
+              0)
 ct = coeftable(m)
 @test ct.rownms == ["(Intercept)", "x1", "x2", "x1 & x2"]
+
+## show after coeftable is defined
+@show m
+
+## Another dummy model type to test fall-through show method
+immutable DummyModTwo <: RegressionModel
+    msg::String
+end
+
+StatsBase.fit(::Type{DummyModTwo}, ::Matrix, ::Vector) = DummyModTwo("hello!")
+Base.show(io::IO, m::DummyModTwo) = println(io, m.msg)
+
+m2 = fit(DummyModTwo, f, d)
+@show m2
 
 end
