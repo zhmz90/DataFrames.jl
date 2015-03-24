@@ -93,6 +93,16 @@ module TestFormula
                       :((&)(x1, x2, x3))]
     @test t.eterms == [:y, :x1, :x2, :x3]
 
+    ## Interactions with `1` reduce to main effect.  All fail at the moment.
+    ## t = Terms(y ~ 1 & x1)
+    ## @test t.terms == [:x1]              # == [:(1 & x1)]
+    ## @test t.eterms == [:y, :x1]
+
+    ## t = Terms(y ~ (1 + x1) & x2)
+    ## @test t.terms == [:x2, :(x1&x2)]    # == [:(1 & x1)]
+    ## @test t.eterms == [:y, :x1, :x2]
+
+
 
     ## Tests for constructing ModelFrame and ModelMatrix
 
@@ -336,5 +346,23 @@ module TestFormula
     ## Condensing nested :+ calls
     f = y ~ x1 + (x2 + (x3 + x4))
     @test ModelMatrix(ModelFrame(f, df)).m == hcat(ones(4), x1, x2, x3, x4)
+
+    
+    ## Extra levels in categorical column
+    mf_full = ModelFrame(y ~ x1p, d)
+    mm_full = ModelMatrix(mf_full)
+    @test size(mm_full) == (4,4)
+
+    mf_sub = ModelFrame(y ~ x1p, d[2:4, :])
+    mm_sub = ModelMatrix(mf_sub)
+    ## should have only three rows, and only three columns (intercept plus two
+    ## levels of factor)
+    @test size(mm_sub) == (3,3)
+
+    ## Missing data
+    d[:x1m] = @data [5, 6, NA, 7]
+    mf = ModelFrame(y ~ x1m, d)
+    mm = ModelMatrix(mf)
+    @test mm.m[:, 2] == d[complete_cases(d), :x1m]
 
 end

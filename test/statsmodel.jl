@@ -6,13 +6,21 @@ using Base.Test
 
 # A dummy RegressionModel type
 immutable DummyMod <: RegressionModel
+    beta::Vector{Float64}
     x::Matrix
     y::Vector
 end
 
 ## dumb fit method: just copy the x and y input over
-StatsBase.fit(::Type{DummyMod}, x::Matrix, y::Vector) = DummyMod(x, y)
+StatsBase.fit(::Type{DummyMod}, x::Matrix, y::Vector) =
+    DummyMod([1:size(x, 2)], x, y)
 StatsBase.model_response(mod::DummyMod) = mod.y
+## dumb coeftable: just prints the "beta" values
+StatsBase.coeftable(mod::DummyMod) =
+    CoefTable(reshape(mod.beta, (size(mod.beta,1), 1)),
+              ["'beta' value"],
+              ["" for n in 1:size(mod.x,2)],
+              0)
 
 ## Test fitting
 d = DataFrame()
@@ -28,29 +36,35 @@ m = fit(DummyMod, f, d)
 
 ## test prediction method
 ## vanilla
-StatsBase.predict(mod::DummyMod) = mod.y
-@test predict(m) == d[:y]
+StatsBase.predict(mod::DummyMod) = mod.x * mod.beta
+@test predict(m) == [ ones(size(d,1)) d[:x1] d[:x2] d[:x1].*d[:x2] ] * [1:4]
 
 ## new data from matrix
-StatsBase.predict(mod::DummyMod, newX::Matrix) = sum(mod.x, 2)
+StatsBase.predict(mod::DummyMod, newX::Matrix) = newX * mod.beta
 mm = ModelMatrix(ModelFrame(f, d))
-@test predict(m, mm.m) == sum(mm.m, 2)
+@test predict(m, mm.m) == mm.m * [1:4]
 
 ## new data from DataFrame (via ModelMatrix)
 @test predict(m, d) == predict(m, mm.m)
 
 ## test copying of names from Terms to CoefTable
-## dumb coeftable: just prints the first four rows of the model (x) matrix
-StatsBase.coeftable(mod::DummyMod) =
-    CoefTable(transpose(mod.x),
-              ["row $n" for n in 1:min(4,size(mod.x,1))],
-              ["" for n in 1:size(mod.x,2)],
-              0)
 ct = coeftable(m)
 @test ct.rownms == ["(Intercept)", "x1", "x2", "x1 & x2"]
 
-## show after coeftable is defined
+## show with coeftable defined
 @show m
+
+## with categorical variables
+d[:x1p] = PooledDataArray(d[:x1])
+f2 = y ~ x1p
+m2 = fit(DummyMod, f2, d)
+
+@test coeftable(m2).rownms == ["(Intercept)", "x1p - 6", "x1p - 7", "x1p - 8"]
+
+## predict w/ new data missing levels
+## FAILS: mismatch between number of model matrix columns
+## @test predict(m2, d[2:4, :]) == predict(m2)[2:4]
+
 
 ## Another dummy model type to test fall-through show method
 immutable DummyModTwo <: RegressionModel
