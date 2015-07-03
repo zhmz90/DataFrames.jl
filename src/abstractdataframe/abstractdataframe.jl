@@ -395,16 +395,16 @@ describe(df)
 ```
 
 """
-describe(df::AbstractDataFrame) = describe(STDOUT, df)
-function describe(io, df::AbstractDataFrame)
+StatsBase.describe(df::AbstractDataFrame) = describe(STDOUT, df)
+function StatsBase.describe(io, df::AbstractDataFrame)
     for (name, col) in eachcol(df)
         println(io, name)
         describe(io, col)
         println(io, )
     end
 end
-describe(dv::AbstractVector) = describe(STDOUT, dv)
-function describe{T<:Number}(io, dv::AbstractVector{T})
+StatsBase.describe(dv::AbstractArray) = describe(STDOUT, dv)
+function StatsBase.describe{T<:Number}(io, dv::AbstractArray{T})
     if all(isna(dv))
         println(io, " * All NA * ")
         return
@@ -421,7 +421,7 @@ function describe{T<:Number}(io, dv::AbstractVector{T})
     println(io, "NA%      $(round(nas*100/length(dv), 2))%")
     return
 end
-function describe{T}(io, dv::AbstractVector{T})
+function StatsBase.describe{T}(io, dv::AbstractArray{T})
     ispooled = isa(dv, PooledDataVector) ? "Pooled " : ""
     # if nothing else, just give the length and element type and NA count
     println(io, "Length  $(length(dv))")
@@ -559,7 +559,7 @@ nonunique(df::AbstractDataFrame)
 
 ### Result
 
-* `::Vector{Bool}` : indicates whether the row is a duplicate of a
+* `::Vector{Bool}` : indicates whether the row is a duplicate of some
   prior row
 
 See also `unique` and `unique!`.
@@ -574,16 +574,14 @@ nonunique(df)
 
 """
 function nonunique(df::AbstractDataFrame)
-    # Return a Vector{Bool} indicated whether the row is a duplicate
-    # of a prior row.
     res = fill(false, nrow(df))
-    di = Dict()
+    rows = Set{DataFrameRow}()
     for i in 1:nrow(df)
-        arow = convert(Array, df[i, :]) # Used to convert to Any type
-        if haskey(di, arow)
+        arow = DataFrameRow(df, i)
+        if in(arow, rows)
             res[i] = true
         else
-            di[arow] = 1
+            push!(rows, arow)
         end
     end
     res
