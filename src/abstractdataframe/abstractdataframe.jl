@@ -130,6 +130,15 @@ function names!(df::AbstractDataFrame, vals)
     return df
 end
 
+function rename!(df::AbstractDataFrame, args...)
+    rename!(index(df), args...)
+    return df
+end
+rename!(f::Function, df::AbstractDataFrame) = rename!(df, f)
+
+rename(df::AbstractDataFrame, args...) = rename!(copy(df), args...)
+rename(f::Function, df::AbstractDataFrame) = rename(df, f)
+
 """
 Rename columns
 
@@ -163,16 +172,7 @@ rename!(df, @compat(Dict(:i=>:A, :x=>:X)))
 ```
 
 """
-[:rename!, :rename]
-
-function rename!(df::AbstractDataFrame, args...)
-    rename!(index(df), args...)
-    return df
-end
-rename!(f::Function, df::AbstractDataFrame) = rename!(df, f)
-
-rename(df::AbstractDataFrame, args...) = rename!(copy(df), args...)
-rename(f::Function, df::AbstractDataFrame) = rename(df, f)
+(rename!, rename)
 
 """
 Column elemental types
@@ -284,6 +284,11 @@ Base.isempty(df::AbstractDataFrame) = ncol(df) == 0
 ##
 ##############################################################################
 
+DataArrays.head(df::AbstractDataFrame, r::Int) = df[1:min(r,nrow(df)), :]
+DataArrays.head(df::AbstractDataFrame) = head(df, 6)
+DataArrays.tail(df::AbstractDataFrame, r::Int) = df[max(1,nrow(df)-r+1):nrow(df), :]
+DataArrays.tail(df::AbstractDataFrame) = tail(df, 6)
+
 """
 Show the first or last part of an AbstractDataFrame
 
@@ -310,12 +315,7 @@ tail(df)
 ```
 
 """
-[:head, :tail]
-
-DataArrays.head(df::AbstractDataFrame, r::Int) = df[1:min(r,nrow(df)), :]
-DataArrays.head(df::AbstractDataFrame) = head(df, 6)
-DataArrays.tail(df::AbstractDataFrame, r::Int) = df[max(1,nrow(df)-r+1):nrow(df), :]
-DataArrays.tail(df::AbstractDataFrame) = tail(df, 6)
+(head, tail)
 
 # get the structure of a DF
 """
@@ -587,6 +587,11 @@ function nonunique(df::AbstractDataFrame)
     res
 end
 
+unique!(df::AbstractDataFrame) = deleterows!(df, find(nonunique(df)))
+
+# Unique rows of an AbstractDataFrame.
+Base.unique(df::AbstractDataFrame) = df[!nonunique(df), :]
+
 """
 Delete duplicate rows
 
@@ -615,12 +620,7 @@ unique!(df)  # modifies df
 ```
 
 """
-[:unique, :unique!]
-
-unique!(df::AbstractDataFrame) = deleterows!(df, find(nonunique(df)))
-
-# Unique rows of an AbstractDataFrame.
-Base.unique(df::AbstractDataFrame) = df[!nonunique(df), :]
+(unique, unique!)
 
 function nonuniquekey(df::AbstractDataFrame)
     # Here's another (probably a lot faster) way to do `nonunique`
@@ -788,5 +788,5 @@ nrow(df)
 ncol(df)
 ```
 
-"""
+""";
 [:nrow, :ncol]
