@@ -231,10 +231,10 @@ Base.ndims(::AbstractDataFrame) = 2
 Base.similar(df::AbstractDataFrame, dims::Int) =
     DataFrame([similar(x, dims) for x in columns(df)], copy(index(df)))
 
-nas{T}(dv::AbstractArray{T}, dims::Union(Int, @compat Tuple{Vararg{Int}})) =   # TODO move to datavector.jl?
+nas{T}(dv::AbstractArray{T}, dims::@compat(Union{Int, Tuple{Vararg{Int}}})) =   # TODO move to datavector.jl?
     DataArray(Array(T, dims), trues(dims))
 
-nas{T,R}(dv::PooledDataArray{T,R}, dims::Union(Int, @compat Tuple{Vararg{Int}})) =
+nas{T,R}(dv::PooledDataArray{T,R}, dims::@compat(Union{Int, Tuple{Vararg{Int}}})) =
     PooledDataArray(DataArrays.RefArray(zeros(R, dims)), dv.pool)
 
 nas(df::AbstractDataFrame, dims::Int) =
@@ -674,7 +674,7 @@ Base.vcat(df::AbstractDataFrame) = df
 
 Base.vcat(dfs::AbstractDataFrame...) = vcat(collect(dfs))
 
-Base.vcat(dfs::Vector{None}) = dfs
+Base.vcat(dfs::Vector{Void}) = dfs
 function Base.vcat{T<:AbstractDataFrame}(dfs::Vector{T})
     coltyps, colnams, similars = _colinfo(dfs)
 
